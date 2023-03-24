@@ -139,12 +139,12 @@ export default {
 </script>
 
 <template>
-  <main class="w-50 m-auto">
+  <main class="container">
     <h1 class="text-center">TODO LIST</h1>
     <hr />
     <div class="row">
       <div class="col-6">
-        <label>Add New or Edit Todo</label>
+        <label>Add or Edit Todo</label>
         <input
           id="ieData"
           type="text"
@@ -194,14 +194,14 @@ export default {
               </td>
               <td class="col-4 text-end">
                 <button
-                  :class="`btn${index} btn btn-primary`"
+                  :class="`btn${index} btn btn-primary m-1`"
                   style="visibility: hidden"
                   @click="editData(item.id)"
                 >
                   <i class="bi bi-pen-fill"></i>
                 </button>
                 <button
-                  :class="`btn${index} mx-2 btn ${
+                  :class="`btn${index} m-1 btn ${
                     item.isCompleted ? 'btn-dark' : 'btn-success'
                   }`"
                   style="visibility: hidden"
@@ -210,7 +210,7 @@ export default {
                   <i class="bi bi-check"></i>
                 </button>
                 <button
-                  :class="`btn${index} btn btn-danger`"
+                  :class="`btn${index} btn btn-danger m-1`"
                   style="visibility: hidden"
                   @click="deleteData(item.id)"
                 >
