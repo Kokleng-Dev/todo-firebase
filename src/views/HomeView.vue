@@ -145,14 +145,20 @@ export default {
     <div class="row">
       <div class="col-6">
         <label>Add or Edit Todo</label>
-        <input
-          id="ieData"
-          type="text"
-          v-model="todo"
-          @keyup.enter="addEditData()"
-          class="form-control"
-          placeholder="Input or Update and Press Enter"
-        />
+        <div class="input-group mb-3">
+          <input
+            id="ieData"
+            type="text"
+            v-model="todo"
+            @keyup.enter="addEditData()"
+            class="form-control"
+            placeholder="Input or Update and Press Enter"
+          />
+          <button class="btn btn-primary" type="button" @click="addEditData()">
+            <i class="bi bi-plus-circle"></i>
+          </button>
+        </div>
+        
       </div>
       <div class="col-6">
         <label>Search Todo</label>
