@@ -25,13 +25,50 @@ export default {
       this.data = this.keepData;
       if (after) {
         this.data = this.data.filter(
-          (item) => item.todo.includes(after)
+          (item) => item.todo.toLowerCase().includes(after.toLowerCase())
         );
       }
     },
   },
   methods: {
+    watchFirebase() {
+      onSnapshot(collection(db, this.database), (doc) => {
+        this.keepData = [];
+        if(this.searchTodo == ''){
+          this.data = [];
+        } 
+        
+        //loop push item to data
+        doc.forEach((todo) => {
+          this.addItem(todo);
+        });
+        
+
+        // add item to data in search
+        if(this.searchTodo != '') {
+          const checkData = this.keepData.filter(item => item.todo.toLowerCase().includes(this.searchTodo.toLowerCase()))
+          if(checkData){
+            this.data = [];
+            checkData.forEach(item => {
+              this.data.push({
+                id: item.id,
+                todo: item.todo,
+                isCompleted: item.isCompleted,
+                createdAt: item.createdAt,
+              });
+            })
+          }
+        }
+      });
+    },
     addItem(doc) {
+      this.keepData.push({
+        id: doc.id,
+        todo: doc.data().todo,
+        isCompleted: doc.data().isCompleted,
+        createdAt: doc.data().createdAt,
+      });
+      
       if(this.searchTodo == ''){
         this.data.push({
           id: doc.id,
@@ -39,28 +76,7 @@ export default {
           isCompleted: doc.data().isCompleted,
           createdAt: doc.data().createdAt,
         });
-      }
-      this.keepData.push({
-        id: doc.id,
-        todo: doc.data().todo,
-        isCompleted: doc.data().isCompleted,
-        createdAt: doc.data().createdAt,
-      });
-    },
-    watchFirebase() {
-      onSnapshot(collection(db, this.database), (doc) => {
-        if(this.searchTodo == ''){
-          this.data = [];
-        }
-        this.keepData = [];
-        doc.forEach((data) => {
-          this.addItem(data);
-        });
-      });
-    },
-    addDuplicate() {
-      const data = this.data;
-      return this.data.find((item) => item.todo.trim() == this.todo.trim());
+      } 
     },
     async addEditData() {
       const todo = this.todo;
@@ -71,41 +87,76 @@ export default {
         return;
       }
 
-      // check if update newData == oldData
+      //edit data
       if (this.isEditId) {
-        let oldTodo = this.data.find(item => item.id == this.isEditId).todo;
-        if(oldTodo == todo){
-          this.isEditId = 0;
-          this.todo = '';
-          return ;
-        }
-      }
-
-      // add data
-      //check is add duplicate data
-      if (!this.addDuplicate()) {
         //give todo to empty, better UX
         this.todo = "";
-
-        // update data
-        if(this.isEditId){
-          await updateDoc(doc(db, this.database, this.isEditId), {
-            todo: todo,
-          });
+        let oldTodo = this.keepData.find(item => item.id == this.isEditId);
+        if(!oldTodo) {
           this.isEditId = 0;
-        } 
-
-        // add data
-        else {
+        } else {
+          oldTodo = oldTodo.todo;
+          // check if update newData == oldData
+          if(oldTodo.toLowerCase() == todo.toLowerCase()){
+            await updateDoc(doc(db, this.database, this.isEditId), {
+              todo: todo,
+            });
+          } else {
+            if(!this.addDuplicate){
+              await updateDoc(doc(db, this.database, this.isEditId), {
+                todo: todo,
+              });
+            } else {
+              window.alert("Duplicate Date");
+            }
+          }
+        }
+      }
+      // insert data 
+      if(!this.isEditId){
+        //check is add duplicate data
+        if (!this.addDuplicate()) {
+          //give todo to empty, better UX
+          this.todo = "";
+          // add data
           await addDoc(collection(db, this.database), {
             todo: todo,
             isCompleted: false,
             createdAt: new Date(),
           });
+        } else {
+          window.alert("Duplicate Date");
         }
-      } else {
-        window.alert("Duplicate Date");
       }
+
+      //reset to 0
+      this.isEditId = 0;
+    },
+    addDuplicate() {
+      const data = this.keepData;
+      return data.find((item) => item.todo.trim().toLowerCase() == this.todo.trim().toLowerCase());
+    },
+    editData(id) {
+      this.isEditId = id;
+      this.todo = this.data.find((item) => item.id == id).todo;
+      document.getElementById("ieData").focus();
+    },
+    async updateMark(id) {
+      const findItem = this.data.find((item) => item.id == id);
+      await updateDoc(doc(db, this.database, id), {
+        isCompleted: !findItem.isCompleted,
+      });
+    },
+    async deleteData(id) {
+      //protech if delete item in search
+      if(this.searchTodo != ''){
+        this.data = this.data.filter(item => item.id != id);
+      }
+      //protech if user click edit to get data then delete it, and click to insert data
+      if(id == this.isEditId){
+        this.isEditId = 0;
+      }
+      await deleteDoc(doc(db, this.database, id));
     },
     mouseEnter(index) {
       document
@@ -120,20 +171,6 @@ export default {
         .forEach((element) => {
           element.style.visibility = "hidden";
         });
-    },
-    async deleteData(id) {
-      await deleteDoc(doc(db, this.database, id));
-    },
-    async updateMark(id) {
-      const findItem = this.data.find((item) => item.id == id);
-      await updateDoc(doc(db, this.database, id), {
-        isCompleted: !findItem.isCompleted,
-      });
-    },
-    editData(id) {
-      this.isEditId = id;
-      this.todo = this.data.find((item) => item.id == id).todo;
-      document.getElementById("ieData").focus();
     },
   },
   mounted() {
