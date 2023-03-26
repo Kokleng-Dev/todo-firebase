@@ -25,20 +25,21 @@ export default {
       this.data = this.keepData;
       if (after) {
         this.data = this.data.filter(
-          (item) => item.todo.trim() == after.trim()
+          (item) => item.todo.includes(after)
         );
       }
     },
   },
   methods: {
     addItem(doc) {
-      this.data.push({
-        id: doc.id,
-        todo: doc.data().todo,
-        isCompleted: doc.data().isCompleted,
-        createdAt: doc.data().createdAt,
-      });
-
+      if(this.searchTodo == ''){
+        this.data.push({
+          id: doc.id,
+          todo: doc.data().todo,
+          isCompleted: doc.data().isCompleted,
+          createdAt: doc.data().createdAt,
+        });
+      }
       this.keepData.push({
         id: doc.id,
         todo: doc.data().todo,
@@ -48,7 +49,10 @@ export default {
     },
     watchFirebase() {
       onSnapshot(collection(db, this.database), (doc) => {
-        this.data = [];
+        if(this.searchTodo == ''){
+          this.data = [];
+        }
+        this.keepData = [];
         doc.forEach((data) => {
           this.addItem(data);
         });
