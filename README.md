@@ -29,5 +29,5 @@ npm run build
 ```
 # todo-firebase deploy on netlify 
 ```sh
-https://quiet-nougat-063d32.netlify.app
+https://vue-firebase-todo-app.netlify.app
 ```
